@@ -14,6 +14,7 @@ class SocketUtil {
     private lateinit var activity: Activity
     private lateinit var ip: String
     private var port: Int = 0
+    private var Try = 0
 
     fun init(activity: Activity, ip: String, port: Int) {
         try {
@@ -24,9 +25,17 @@ class SocketUtil {
 
             socket = Socket(ip, port)
             outputStream = DataOutputStream(socket.getOutputStream())
+            Try = 0
+
         } catch (e: Exception) {
-            Toast.makeText(activity, "${javaClass.name} Error : $e", Toast.LENGTH_LONG).show()
-            init(activity, ip, port)
+            Try++
+            if (Try == 10) {
+
+                activity.runOnUiThread {
+                    Toast.makeText(activity, "${javaClass.name} Error1 : $e", Toast.LENGTH_LONG).show()
+                }
+                init(activity, ip, port)
+            }
         }
 
     }
@@ -34,9 +43,17 @@ class SocketUtil {
     fun sendData(sender: Sender) {
         try {
             outputStream.write("${Gson().toJson(sender)}|".toByteArray())
+            Try = 0
         } catch (e: Exception) {
-            Toast.makeText(activity, "${javaClass.name} SendData : $e", Toast.LENGTH_LONG).show()
+            Try++
+            if (Try == 10) {
+
+                activity.runOnUiThread {
+                    Toast.makeText(activity, "${javaClass.name} SendData2 : $e", Toast.LENGTH_LONG).show()
+                }
+
             init(activity, ip, port)
+            }
         }
     }
 

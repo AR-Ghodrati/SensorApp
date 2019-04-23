@@ -48,7 +48,6 @@ open class MainActivity : AppCompatActivity()
     private var mLocationManager: LocationManager? = null
     lateinit var mLocation: Location
     private var mLocationRequest: LocationRequest? = null
-    private val listener: com.google.android.gms.location.LocationListener? = null
     private val UPDATE_INTERVAL = (2 * 1000).toLong()  /* 10 secs */
     private val FASTEST_INTERVAL: Long = 2000 /* 2 sec */
 
@@ -146,14 +145,6 @@ open class MainActivity : AppCompatActivity()
 
         })
 
-        socketUtil = SocketUtil().apply {
-            init(
-                this@MainActivity
-                , ip.text.toString().split(":").first()
-                , ip.text.toString().split(":").last().toInt()
-            )
-        }
-
 
         mLocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -161,8 +152,18 @@ open class MainActivity : AppCompatActivity()
 
 
         start?.setOnClickListener {
+
             if (ip?.text.toString().isNotEmpty() && timer?.text.toString().isNotEmpty()) {
+
                 isActive = true
+                socketUtil = SocketUtil().apply {
+                    init(
+                        this@MainActivity
+                        , ip.text.toString().split(":").first()
+                        , ip.text.toString().split(":").last().toInt()
+                    )
+                }
+
                 Timer().scheduleAtFixedRate(object : TimerTask() {
                     override fun run() {
                         updateLog()
