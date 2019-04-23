@@ -1,8 +1,10 @@
 package ir.FiroozehCorp.SensorApp.Utils
 
 import android.app.Activity
+import android.util.Log
 import android.widget.Toast
 import com.google.gson.Gson
+import ir.FiroozehCorp.SensorApp.Activities.MainActivity
 import ir.FiroozehCorp.SensorApp.Models.Sender
 import java.io.DataOutputStream
 import java.net.Socket
@@ -10,7 +12,7 @@ import java.net.Socket
 class SocketUtil {
 
     private lateinit var socket: Socket
-    private lateinit var outputStream: DataOutputStream
+    private var outputStream: DataOutputStream? = null
     private lateinit var activity: Activity
     private lateinit var ip: String
     private var port: Int = 0
@@ -26,8 +28,10 @@ class SocketUtil {
             socket = Socket(ip, port)
             outputStream = DataOutputStream(socket.getOutputStream())
             Try = 0
+            MainActivity.isActive = true
 
         } catch (e: Exception) {
+            Log.e(javaClass.name, "Error 1 :$e")
             Try++
             if (Try == 10) {
 
@@ -42,9 +46,12 @@ class SocketUtil {
 
     fun sendData(sender: Sender) {
         try {
-            outputStream.write("${Gson().toJson(sender)}|".toByteArray())
+            val send = "${Gson().toJson(sender)}|"
+            Log.e(javaClass.name, "Send : $send")
+            outputStream?.write(send.toByteArray())
             Try = 0
         } catch (e: Exception) {
+            Log.e(javaClass.name, "Error 2 :$e")
             Try++
             if (Try == 10) {
 
@@ -54,6 +61,14 @@ class SocketUtil {
 
             init(activity, ip, port)
             }
+        }
+    }
+
+    fun terminate() {
+        try {
+            socket.close()
+            outputStream?.close()
+        } catch (e: Exception) {
         }
     }
 

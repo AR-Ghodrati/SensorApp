@@ -36,10 +36,13 @@ open class MainActivity : AppCompatActivity()
 
     private var gyroEvent: SensorEvent? = null
     private var CompassEvent: SensorEvent? = null
-    private lateinit var socketUtil: SocketUtil
+    private var socketUtil: SocketUtil? = null
+    private var Timer: Timer? = null
 
 
-    private var isActive = false
+    companion object {
+        var isActive = false
+    }
 
 
 
@@ -155,20 +158,26 @@ open class MainActivity : AppCompatActivity()
 
             if (ip?.text.toString().isNotEmpty() && timer?.text.toString().isNotEmpty()) {
 
-                isActive = true
-                socketUtil = SocketUtil().apply {
-                    init(
-                        this@MainActivity
-                        , ip.text.toString().split(":").first()
-                        , ip.text.toString().split(":").last().toInt()
-                    )
+
+                Thread {
+                    socketUtil = SocketUtil().apply {
+                        init(
+                            this@MainActivity
+                            , ip.text.toString().split(":").first()
+                            , ip.text.toString().split(":").last().toInt()
+                        )
+                    }
+
+                }.start()
+
+                Timer = Timer().apply {
+                    scheduleAtFixedRate(object : TimerTask() {
+                        override fun run() {
+                            updateLog()
+                        }
+                    }, 0L, timer?.text.toString().toLong())
                 }
 
-                Timer().scheduleAtFixedRate(object : TimerTask() {
-                    override fun run() {
-                        updateLog()
-                    }
-                }, 0L, timer?.text.toString().toLong())
             } else
                 Toast.makeText(this, "Fill All Fields", Toast.LENGTH_SHORT).show()
         }
@@ -228,7 +237,7 @@ open class MainActivity : AppCompatActivity()
     @SuppressLint("SetTextI18n")
     private fun updateLog() {
 
-        if (isActive)
+        if (isActive) {
             runOnUiThread {
 
                 locationLog?.text = "Accuracy : ${mLocation.accuracy}\n" +
@@ -248,25 +257,37 @@ open class MainActivity : AppCompatActivity()
                             " , Y : ${CompassEvent?.values?.get(1)}" +
                             " , Z : ${CompassEvent?.values?.get(2)}"
 
-                Thread {
-                    socketUtil.sendData(Sender().apply {
-
-                        gyroData = gyroEvent?.values
-                        compassData = CompassEvent?.values
-
-                        location = Location().apply {
-                            accuracy = mLocation.accuracy
-                            lalitude = mLocation.latitude
-                            longitude = mLocation.longitude
-                            time = mLocation.time
-                            speed = mLocation.speed
-                        }
-                    })
-                }.start()
-
-
             }
 
+            Thread {
+                socketUtil?.sendData(Sender().apply {
 
+                    gyroData = gyroEvent?.values
+                    compassData = CompassEvent?.values
+
+                    location = Location().apply {
+                        accuracy = mLocation.accuracy
+                        lalitude = mLocation.latitude
+                        longitude = mLocation.longitude
+                        time = mLocation.time
+                        speed = mLocation.speed
+                    }
+                })
+            }.start()
+        }
+
+
+    }
+
+    override fun onDestroy() {
+        try {
+            socketUtil?.terminate()
+            Timer?.cancel()
+            Timer?.purge()
+        } catch (e: Exception) {
+        }
+
+        isActive = false
+        super.onDestroy()
     }
 }
