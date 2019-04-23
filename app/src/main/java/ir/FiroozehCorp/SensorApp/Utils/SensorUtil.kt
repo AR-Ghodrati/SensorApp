@@ -14,4 +14,10 @@ object SensorUtil {
         val gyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
         mSensorManager.registerListener(listener, gyroscopeSensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
+
+    fun getCompassData(activity: Activity, listener: SensorEventListener) {
+        val mSensorManager = activity.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val gyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION)
+        mSensorManager.registerListener(listener, gyroscopeSensor, SensorManager.SENSOR_DELAY_GAME)
+    }
 }

@@ -22,27 +22,26 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
-import com.google.gson.Gson
+import ir.FiroozehCorp.SensorApp.Models.Sender
 import ir.FiroozehCorp.SensorApp.R
 import ir.FiroozehCorp.SensorApp.Utils.SensorUtil
+import ir.FiroozehCorp.SensorApp.Utils.SocketUtil
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
 open class MainActivity : AppCompatActivity()
     , GoogleApiClient.ConnectionCallbacks
     , GoogleApiClient.OnConnectionFailedListener
-    , com.google.android.gms.location.LocationListener, SensorEventListener {
+    , com.google.android.gms.location.LocationListener {
 
-    private var event: SensorEvent? = null
+    private var gyroEvent: SensorEvent? = null
+    private var CompassEvent: SensorEvent? = null
+    private lateinit var socketUtil: SocketUtil
+
+
     private var isActive = false
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
 
-    }
-
-    override fun onSensorChanged(event: SensorEvent?) {
-        this@MainActivity.event = event
-    }
 
     private val TAG = "MainActivity"
     private lateinit var mGoogleApiClient: GoogleApiClient
@@ -102,7 +101,7 @@ open class MainActivity : AppCompatActivity()
         }
 
 
-        startLocationUpdates();
+        startLocationUpdates()
 
         val fusedLocationProviderClient:
                 FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -127,7 +126,34 @@ open class MainActivity : AppCompatActivity()
             .addApi(LocationServices.API)
             .build()
 
-        SensorUtil.getGyroscopeData(this, this)
+        SensorUtil.getGyroscopeData(this, object : SensorEventListener {
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+
+            }
+
+            override fun onSensorChanged(event: SensorEvent?) {
+                this@MainActivity.gyroEvent = event
+            }
+
+        })
+        SensorUtil.getCompassData(this, object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                this@MainActivity.CompassEvent = event
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+            }
+
+        })
+
+        socketUtil = SocketUtil().apply {
+            init(
+                this@MainActivity
+                , ip.text.toString().split(":").first()
+                , ip.text.toString().split(":").last().toInt()
+            )
+        }
+
 
         mLocationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -198,13 +224,48 @@ open class MainActivity : AppCompatActivity()
         )
     }
 
+    @SuppressLint("SetTextI18n")
     private fun updateLog() {
-        if (isActive) {
+
+        if (isActive)
             runOnUiThread {
-                locationLog?.text = Gson().toJson(mLocation)
-                gyroLog?.text = Gson().toJson(event)
+
+                locationLog?.text = "Accuracy : ${mLocation.accuracy}\n" +
+                        "Latitude : ${mLocation.latitude}\n" +
+                        "Longitude : ${mLocation.longitude}\n" +
+                        "Time : ${mLocation.time}\n" +
+                        "Speed : ${mLocation.speed}"
+
+
+                gyroLog?.text =
+                    "X : ${gyroEvent?.values?.get(0)}" +
+                            " , Y : ${gyroEvent?.values?.get(1)}" +
+                            " , Z : ${gyroEvent?.values?.get(2)}"
+
+                compassData?.text =
+                    "X : ${CompassEvent?.values?.get(0)}" +
+                            " , Y : ${CompassEvent?.values?.get(1)}" +
+                            " , Z : ${CompassEvent?.values?.get(2)}"
+
+                Thread {
+                    socketUtil.sendData(Sender().apply {
+
+                        gyroData = gyroEvent?.values
+                        compassData = CompassEvent?.values
+
+                        location = Location().apply {
+                            accuracy = mLocation.accuracy
+                            lalitude = mLocation.latitude
+                            longitude = mLocation.longitude
+                            time = mLocation.time
+                            speed = mLocation.speed
+                        }
+                    })
+                }.start()
+
+
             }
-        }
+
 
     }
 }
