@@ -267,7 +267,7 @@ open class MainActivity : AppCompatActivity()
 
                     location = Location().apply {
                         accuracy = mLocation.accuracy
-                        lalitude = mLocation.latitude
+                        latitude = mLocation.latitude
                         longitude = mLocation.longitude
                         time = mLocation.time
                         speed = mLocation.speed
