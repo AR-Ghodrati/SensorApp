@@ -20,8 +20,8 @@
             <LinearLayout android:orientation="vertical" android:layout_width="match_parent"
                           android:layout_height="wrap_content">
                 <ImageView
-                        android:layout_width="100"
-                        android:layout_height="100" app:srcCompat="@drawable/ico" android:id="@+id/imageView"
+                        android:layout_width="100dp"
+                        android:layout_height="100dp" app:srcCompat="@drawable/ico" android:id="@+id/imageView"
                         android:layout_gravity="center"/>
                 <EditText
                         android:layout_width="match_parent"

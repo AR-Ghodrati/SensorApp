@@ -20,6 +20,7 @@ import android.widget.Toast
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import ir.FiroozehCorp.SensorApp.Models.Sender
@@ -32,7 +33,7 @@ import java.util.*
 open class MainActivity : AppCompatActivity()
     , GoogleApiClient.ConnectionCallbacks
     , GoogleApiClient.OnConnectionFailedListener
-    , com.google.android.gms.location.LocationListener {
+    , LocationListener {
 
     private var gyroEvent: SensorEvent? = null
     private var CompassEvent: SensorEvent? = null
